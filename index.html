@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AshX - Ash Dam Safety Node</title>
+<link rel="stylesheet" href="style.css" />
+
+<!-- Chart.js 4 (UMD build, gives us a global called Chart) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+
+<!-- Three.js r160 comes in as an ES module through this import map -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ===================== TOP BAR ===================== -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">AX</span>
+    <span class="brand-name">AshX</span>
+  </div>
+  <nav class="crumbs">
+    <span>Ash dam monitoring</span>
+    <span class="crumb-sep">/</span>
+    <span>Digital twin</span>
+    <span class="crumb-sep">/</span>
+    <span class="crumb-active" id="crumb-device">ashx-01</span>
+  </nav>
+  <div class="topbar-right">
+    <span class="pill" id="source-pill">source: SIM</span>
+    <span class="pill" id="uptime-pill">uptime 0s</span>
+    <span class="pill pill-link" id="link-pill">
+      <span class="dot"></span><span id="link-text">connecting</span>
+    </span>
+  </div>
+</header>
+
+<!-- ===================== OFFLINE BANNER ===================== -->
+<div class="offline-banner" id="offline-banner" hidden>
+  Device offline. Safety logic still running on the edge.
+</div>
+
+<main class="layout">
+
+  <!-- ===================== LEFT SIDEBAR ===================== -->
+  <aside class="sidebar">
+
+    <section class="block">
+      <h2 class="block-title">Node status</h2>
+      <div class="state-badge" id="state-badge">
+        <span class="state-dot"></span>
+        <span id="state-text">WAITING</span>
+      </div>
+
+      <div class="gauge">
+        <div class="gauge-track">
+          <div class="gauge-fill" id="gauge-fill"></div>
+          <div class="gauge-mark gauge-mark-safe" id="mark-safe" title="Safe reset 7.0 cm"></div>
+          <div class="gauge-mark gauge-mark-crit" id="mark-crit" title="Critical 10.0 cm"></div>
+        </div>
+        <div class="gauge-labels">
+          <span>0 cm</span>
+          <span id="gauge-value">-- cm</span>
+          <span id="gauge-top">15 cm</span>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card"><span class="card-label">Level</span><span class="card-value" id="v-level">--</span><span class="card-unit">cm</span></div>
+        <div class="card"><span class="card-label">Fill</span><span class="card-value" id="v-pct">--</span><span class="card-unit">%</span></div>
+        <div class="card"><span class="card-label">Rise / 5 s</span><span class="card-value" id="v-rise">--</span><span class="card-unit">cm</span></div>
+        <div class="card"><span class="card-label">Time to critical</span><span class="card-value" id="v-ttc">--</span><span class="card-unit"></span></div>
+        <div class="card"><span class="card-label">Gate</span><span class="card-value" id="v-gate">--</span><span class="card-unit"></span></div>
+        <div class="card"><span class="card-label">Pump</span><span class="card-value" id="v-pump">--</span><span class="card-unit"></span></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">Scenario</h2>
+      <div class="scenarios" id="scenario-buttons"><!-- filled by main.js --></div>
+      <p class="scenario-note" id="scenario-note"></p>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">Manual level override</h2>
+      <input type="range" id="level-slider" min="0" max="15" step="0.1" value="5" />
+      <div class="slider-row">
+        <span class="muted">drag to force a level</span>
+        <span id="slider-value">5.0 cm</span>
+      </div>
+      <button class="btn-ghost" id="release-slider">release to simulation</button>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">Edge safety rules</h2>
+      <ul class="rules">
+        <li>Critical at or above <b>10.0 cm</b></li>
+        <li>Or a rise of <b>3.0 cm</b> in 5 s</li>
+        <li>Clears only below <b>7.0 cm</b></li>
+        <li>Median of 5 filter on the sensor</li>
+      </ul>
+      <p class="muted small">The dashboard only watches. All decisions happen on the ESP32.</p>
+    </section>
+  </aside>
+
+  <!-- ===================== CENTRE ===================== -->
+  <section class="stage">
+
+    <div class="viewport" id="viewport">
+      <div class="viewport-head">
+        <span class="vp-title">Digital twin</span>
+        <span class="vp-hint">drag to orbit, scroll to zoom, right drag to pan</span>
+      </div>
+      <div class="legend">
+        <span><i class="sw sw-ok"></i>green LED, system OK</span>
+        <span><i class="sw sw-crit"></i>red LED, critical</span>
+        <span><i class="sw sw-water"></i>water level</span>
+      </div>
+      <!-- Three.js mounts its canvas here -->
+    </div>
+
+    <div class="chart-panel">
+      <div class="panel-head">
+        <span class="panel-title">Level history</span>
+        <span class="panel-sub" id="chart-sub">last 120 readings</span>
+      </div>
+      <div class="chart-wrap"><canvas id="level-chart"></canvas></div>
+    </div>
+
+    <div class="console">
+      <div class="console-head">
+        <span class="panel-title">Console</span>
+        <span class="panel-sub">event log</span>
+        <button class="btn-ghost btn-tiny" id="clear-log">clear</button>
+      </div>
+      <div class="console-body" id="log"></div>
+    </div>
+
+  </section>
+</main>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

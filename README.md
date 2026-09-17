@@ -19,6 +19,35 @@ The dashboard only watches. It never sends a command to the device.
 
 ---
 
+## The team and the build
+
+<table>
+  <tr>
+    <td width="50%"><img src="eeeee.jpeg" alt="Walking through the wiring plan" width="100%"></td>
+    <td width="50%"><img src="iiiii.jpeg" alt="ESP32, ultrasonic sensor, buzzer and servo" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Walking the team through the wiring plan.</sub></td>
+    <td align="center"><sub>The ESP32, HC-SR04, buzzer and servo before they went into the rig.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="WhatsApp%20Image%202026-09-18%20at%2000.51.35.jpeg" alt="LEDs and resistors on the breadboard" width="100%"></td>
+    <td><img src="sva.jpeg" alt="Designing the housing in CAD" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Status LEDs and their resistors on the breadboard.</sub></td>
+    <td align="center"><sub>Drawing up the 3D printed housing in CAD.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="WhatsApp%20Image%202026-09-18%20at%2000.53.41.jpeg" alt="Heads down at the hackathon" width="100%"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub>Heads down at the hackathon.</sub></td>
+  </tr>
+</table>
+
+---
+
 ## How to run it
 
 1. Open this folder in VS Code.
@@ -75,6 +104,26 @@ This is the quickest way to demonstrate the thresholds on stage. Press
 Everything in the 3D scene is built from Three.js primitives, so there are no
 model files to download. One world unit equals one centimetre, which means the
 water box height is literally the level in cm.
+
+---
+
+## The 3D printed housing
+
+The `3d model` folder holds the printable parts for the rig that carries the
+sensor over the tank. Every part is a plain STL, so you can drop them straight
+into a slicer.
+
+<p align="center">
+  <img src="3d%20model/AshX_housing_preview.png" alt="AshX housing, assembled preview" width="700">
+</p>
+
+| File | Part |
+|------|------|
+| `3d model/AshX_1_base.stl` | base plate the whole rig stands on |
+| `3d model/AshX_2_wall.stl` | upright wall that carries the arm |
+| `3d model/AshX_3_arm.stl` | arm that holds the HC-SR04 over the water |
+| `3d model/AshX_4_plate.stl` | moving level plate the sensor reads against |
+| `3d model/AshX_housing_preview.png` | the assembled preview above |
 
 ---
 
